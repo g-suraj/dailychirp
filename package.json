@@ -7,11 +7,15 @@
     "start": "astro dev",
     "build": "astro check && astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "format": "eslint --fix --ext .js,.jsx,.ts"
   },
   "dependencies": {
-    "astro": "^4.4.0",
     "@astrojs/check": "^0.5.4",
+    "astro": "^4.4.0",
     "typescript": "^5.3.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0"
   }
 }
