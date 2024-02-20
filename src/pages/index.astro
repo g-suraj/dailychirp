@@ -1,5 +1,4 @@
 ---
-import "../styles/global.css";
 import Header from "../components/Header.astro";
 
 const todaysIndex = 0;
@@ -20,6 +19,8 @@ const {
   _pictures,
   _occurrences,
 } = birds[0];
+
+let imageStyle = "filter: blur(15px)";
 ---
 
 <html>
@@ -38,9 +39,37 @@ const {
   <Header />
 
   <body>
-    <!-- <figure class="image is-square">
-            <img class="is-rounded" src={_pictures[0]}>
-        </figure> -->
+    <section class="section">
+      <div class="columns is-centered is-multiline is-mobile">
+        <div class="column is-full has-text-centered">
+          <div class="title is-4">What's the birdsong?</div>
+        </div>
+
+        <div class="column is-full has-text-centered">
+          <div style="width: 30%;margin: 0 auto;">
+            <div class="image is-square" style="">
+              <img src={_pictures[2]} style={imageStyle} />
+            </div>
+          </div>
+        </div>
+
+        <div class="column is-narrow has-text-centered">
+          <audio
+            controls
+            style="width: inherit;"
+            src={_occurrences[0]["__birdsong"]}></audio>
+        </div>
+
+        <div class="column is-full has-text-centered">
+          <div class="buttons is-centered">
+            <button class="button">One</button>
+            <button class="button">Two</button>
+            <button class="button">Three</button>
+            <button class="button">Four</button>
+          </div>
+        </div>
+      </div>
+    </section>
   </body>
 
 
