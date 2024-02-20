@@ -1,16 +1,47 @@
 ---
+import "../styles/global.css";
+import Header from "../components/Header.astro";
 
+const todaysIndex = 0;
+let data = await fetch(
+  "https://g-suraj.github.io/xeno-canto-processed/pickled_data.json",
+);
+let birds = await data.json();
+const {
+  scientificName,
+  higherClassification,
+  kingdom,
+  phylum,
+  class: speciesClass,
+  order,
+  family,
+  genus,
+  vernacularName,
+  _pictures,
+  _occurrences,
+} = birds[0];
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Daily Chirp</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Daily Chirp</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
+    />
+  </head>
+
+  <Header />
+
+  <body>
+    <!-- <figure class="image is-square">
+            <img class="is-rounded" src={_pictures[0]}>
+        </figure> -->
+  </body>
+
+
 </html>
