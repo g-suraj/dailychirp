@@ -1,29 +1,80 @@
 ---
+import { Image } from "astro:assets";
 import Header from "../components/Header.astro";
 
-const todaysIndex = 0;
-let data = await fetch(
+type Occurence = {
+  __birdsong: string;
+  __license: string;
+  __rightsHolder: string;
+  sex: string;
+  fieldNotes: string;
+  gbifID: string;
+  level0Name: string;
+  level1Name: string;
+  level2Name: string;
+  speciesKey: string;
+};
+
+type Bird = {
+  scientificName: string;
+  higherClassification: string;
+  kingdom: string;
+  phylum: string;
+  class: string;
+  order: string;
+  family: string;
+  genus: string;
+  vernacularName: string;
+  _pictures: string[];
+  _occurrences: Occurence[];
+};
+
+async function stableStringToNumGenerator(
+  str: string,
+  modulo: number,
+): Promise<number> {
+  /* Generate stable random numbers which are index into the birds object */
+  const msgUint8 = new TextEncoder().encode(str);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.reduce((prev, curr) => prev * curr) % modulo;
+}
+
+async function todaysGuesses(todayDateStr: string, numBirds: number) {
+  /* Helper to generate today's guesses in a stable manner */
+  const todaysIndex = await stableStringToNumGenerator(todayDateStr, numBirds);
+  const option1 = await stableStringToNumGenerator(
+    todaysIndex.toString(),
+    numBirds,
+  );
+  const option2 = await stableStringToNumGenerator(
+    option1.toString(),
+    numBirds,
+  );
+  const option3 = await stableStringToNumGenerator(
+    option2.toString(),
+    numBirds,
+  );
+  const insertionIndex = Math.floor(Math.random() * 4);
+  const guesses = [option1, option2, option3];
+  guesses.splice(insertionIndex, 0, todaysIndex);
+  return { todaysIndex, guesses };
+}
+
+// Fetch all birds from DB
+const data = await fetch(
   "https://g-suraj.github.io/xeno-canto-processed/pickled_data.json",
 );
-let birds = await data.json();
-const {
-  scientificName,
-  higherClassification,
-  kingdom,
-  phylum,
-  class: speciesClass,
-  order,
-  family,
-  genus,
-  vernacularName,
-  _pictures,
-  _occurrences,
-} = birds[0];
+const birds: Bird[] = await data.json();
+const numBirds = birds.length;
 
-let imageStyle = "filter: blur(15px)";
+const todayDateStr = new Date().toDateString();
+const { todaysIndex, guesses } = await todaysGuesses(todayDateStr, numBirds);
+
+const todaysBird = birds[todaysIndex];
 ---
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -37,6 +88,40 @@ let imageStyle = "filter: blur(15px)";
   </head>
 
   <Header />
+  <script>
+    const today = new Date().toDateString();
+    const image = document.querySelector(".bird-image");
+    const buttons = document.querySelectorAll(".button");
+
+    window.addEventListener("load", () => {
+      const hasGuessed = today in localStorage;
+
+      if (!image || !buttons) {
+        console.error("Nothings loaded yet");
+        return;
+      }
+
+      image.setAttribute("style", hasGuessed ? "" : "filter: blur(15px)");
+    });
+
+    function refreshButtons() {
+      buttons.forEach((button) => {
+        const rightButton = button.getAttribute("value") === "yes";
+        if (rightButton) {
+          button.classList.add("is-success");
+        }
+      });
+    }
+
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const rightButton = button.getAttribute("value") === "yes";
+        localStorage.setItem(today, rightButton ? "correct" : "wrong");
+        button.classList.add(rightButton ? "is-success" : "is-danger");
+        refreshButtons();
+      });
+    });
+  </script>
 
   <body>
     <section class="section">
@@ -46,26 +131,34 @@ let imageStyle = "filter: blur(15px)";
         </div>
 
         <div class="column is-full has-text-centered">
-          <div style="width: 30%;margin: 0 auto;">
-            <div class="image is-square" style="">
-              <img src={_pictures[2]} style={imageStyle} />
-            </div>
-          </div>
+          <Image
+            class="bird-image"
+            src={todaysBird["_pictures"][2]}
+            alt="A bird."
+            width="500"
+            inferSize
+          />
         </div>
 
         <div class="column is-narrow has-text-centered">
           <audio
             controls
             style="width: inherit;"
-            src={_occurrences[0]["__birdsong"]}></audio>
+            src={todaysBird["_occurrences"][0]["__birdsong"]}></audio>
         </div>
 
         <div class="column is-full has-text-centered">
           <div class="buttons is-centered">
-            <button class="button">One</button>
-            <button class="button">Two</button>
-            <button class="button">Three</button>
-            <button class="button">Four</button>
+            {
+              guesses.map((g) => (
+                <button
+                  class="button guess-button"
+                  value={g === todaysIndex ? "yes" : "no"}
+                >
+                  {birds[g]["vernacularName"]}
+                </button>
+              ))
+            }
           </div>
         </div>
       </div>
