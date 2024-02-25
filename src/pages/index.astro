@@ -1,77 +1,6 @@
 ---
 import { Image } from "astro:assets";
 import Header from "../components/Header.astro";
-
-type Occurence = {
-  __birdsong: string;
-  __license: string;
-  __rightsHolder: string;
-  sex: string;
-  fieldNotes: string;
-  gbifID: string;
-  level0Name: string;
-  level1Name: string;
-  level2Name: string;
-  speciesKey: string;
-};
-
-type Bird = {
-  scientificName: string;
-  higherClassification: string;
-  kingdom: string;
-  phylum: string;
-  class: string;
-  order: string;
-  family: string;
-  genus: string;
-  vernacularName: string;
-  _pictures: string[];
-  _occurrences: Occurence[];
-};
-
-async function stableStringToNumGenerator(
-  str: string,
-  modulo: number,
-): Promise<number> {
-  /* Generate stable random numbers which are index into the birds object */
-  const msgUint8 = new TextEncoder().encode(str);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.reduce((prev, curr) => prev * curr) % modulo;
-}
-
-async function todaysGuesses(todayDateStr: string, numBirds: number) {
-  /* Helper to generate today's guesses in a stable manner */
-  const todaysIndex = await stableStringToNumGenerator(todayDateStr, numBirds);
-  const option1 = await stableStringToNumGenerator(
-    todaysIndex.toString(),
-    numBirds,
-  );
-  const option2 = await stableStringToNumGenerator(
-    option1.toString(),
-    numBirds,
-  );
-  const option3 = await stableStringToNumGenerator(
-    option2.toString(),
-    numBirds,
-  );
-  const insertionIndex = Math.floor(Math.random() * 4);
-  const guesses = [option1, option2, option3];
-  guesses.splice(insertionIndex, 0, todaysIndex);
-  return { todaysIndex, guesses };
-}
-
-// Fetch all birds from DB
-const data = await fetch(
-  "https://g-suraj.github.io/xeno-canto-processed/pickled_data.json",
-);
-const birds: Bird[] = await data.json();
-const numBirds = birds.length;
-
-const todayDateStr = new Date().toDateString();
-const { todaysIndex, guesses } = await todaysGuesses(todayDateStr, numBirds);
-
-const todaysBird = birds[todaysIndex];
 ---
 
 <html lang="en">
@@ -89,21 +18,97 @@ const todaysBird = birds[todaysIndex];
 
   <Header />
   <script>
+    import type { Bird } from "../types/types";
+
     const today = new Date().toDateString();
     const image = document.querySelector(".bird-image");
-    const buttons = document.querySelectorAll(".button");
+    const audio = document.querySelector(".bird-audio");
+    const buttonsContainer = document.querySelector(".buttons-container");
 
-    window.addEventListener("load", () => {
+    async function stableStringToNumGenerator(
+      str: string,
+      modulo: number,
+    ): Promise<number> {
+      /* Generate stable random numbers which are index into the birds object */
+      const msgUint8 = new TextEncoder().encode(str);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.reduce((prev, curr) => prev * curr) % modulo;
+    }
+
+    async function todaysGuesses(todayDateStr: string, numBirds: number) {
+      /* Helper to generate today's guesses in a stable manner */
+      const todaysIndex = await stableStringToNumGenerator(
+        todayDateStr,
+        numBirds,
+      );
+      const option1 = await stableStringToNumGenerator(
+        todaysIndex.toString(),
+        numBirds,
+      );
+      const option2 = await stableStringToNumGenerator(
+        option1.toString(),
+        numBirds,
+      );
+      const option3 = await stableStringToNumGenerator(
+        option2.toString(),
+        numBirds,
+      );
+      const insertionIndex = Math.floor(Math.random() * 4);
+      const guesses = [option1, option2, option3];
+      guesses.splice(insertionIndex, 0, todaysIndex);
+      return { todaysIndex, guesses };
+    }
+
+    window.addEventListener("load", async () => {
+      // Fetch all birds from DB
+      const data = await fetch(
+        "https://g-suraj.github.io/xeno-canto-processed/pickled_data.json",
+      );
+      const birds: Bird[] = await data.json();
+      const numBirds = birds.length;
+
+      const todayDateStr = new Date().toDateString();
+      const { todaysIndex, guesses } = await todaysGuesses(
+        todayDateStr,
+        numBirds,
+      );
+
+      const todaysBird = birds[todaysIndex];
+
+      image?.setAttribute("src", todaysBird["_pictures"][0]);
+      image?.removeAttribute("hidden");
+      audio?.setAttribute("src", todaysBird["_occurrences"][0]["__birdsong"]);
+
       const hasGuessed = today in localStorage;
-      image?.setAttribute("style", hasGuessed ? "" : "filter: blur(15px)");
+
+      guesses.forEach((guess: number) => {
+        let btn = document.createElement("div");
+        btn.innerHTML += `
+          <button 
+              style="opacity: 1"
+              class="button guess-button"
+              value="${guess === todaysIndex ? "yes" : "no"}|${guess}">${birds[guess]["vernacularName"]}
+          </button>
+        `;
+        btn.addEventListener("click", () => {
+          localStorage.setItem(today, `${guess}`);
+          refreshButtons();
+          image?.setAttribute("style", "");
+        });
+        buttonsContainer?.appendChild(btn);
+      });
+
       if (hasGuessed) {
         refreshButtons();
       }
+      image?.setAttribute("style", hasGuessed ? "" : "filter: blur(15px)");
     });
 
     function refreshButtons() {
       const userGuess = localStorage.getItem(today) || "";
-      buttons.forEach((button) => {
+      const buttons = document.querySelectorAll(".guess-button");
+      buttons?.forEach((button) => {
         if (button.getAttribute("value")?.startsWith("yes")) {
           button.classList.add("is-success");
         }
@@ -111,18 +116,9 @@ const todaysBird = birds[todaysIndex];
         if (button.getAttribute("value") === `no|${userGuess}`) {
           button.classList.add("is-danger");
         }
+        button.setAttribute("disabled", "");
       });
     }
-
-    buttons.forEach((button) => {
-      button.addEventListener("click", () => {
-        const guess = button.getAttribute("value")?.split("|") || "";
-        const userGuess = guess[1];
-        localStorage.setItem(today, userGuess);
-        refreshButtons();
-        image?.setAttribute("style", "");
-      });
-    });
   </script>
 
   <body>
@@ -135,33 +131,21 @@ const todaysBird = birds[todaysIndex];
         <div class="column is-full has-text-centered">
           <Image
             class="bird-image"
-            src={todaysBird["_pictures"][2]}
             alt="A bird."
             width="500"
             inferSize
+            src="https://images.naturalis.nl/original/193834.jpg"
+            hidden="true"
+            style=""
           />
         </div>
 
         <div class="column is-narrow has-text-centered">
-          <audio
-            controls
-            style="width: inherit;"
-            src={todaysBird["_occurrences"][0]["__birdsong"]}></audio>
+          <audio controls style="width: inherit;" class="bird-audio"></audio>
         </div>
 
         <div class="column is-full has-text-centered">
-          <div class="buttons is-centered">
-            {
-              guesses.map((g) => (
-                <button
-                  class="button guess-button"
-                  value={g === todaysIndex ? "yes" : "no" + "|" + g}
-                >
-                  {birds[g]["vernacularName"]}
-                </button>
-              ))
-            }
-          </div>
+          <div class="buttons is-centered buttons-container"></div>
         </div>
       </div>
     </section>
