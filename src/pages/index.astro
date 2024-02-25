@@ -95,30 +95,32 @@ const todaysBird = birds[todaysIndex];
 
     window.addEventListener("load", () => {
       const hasGuessed = today in localStorage;
-
-      if (!image || !buttons) {
-        console.error("Nothings loaded yet");
-        return;
+      image?.setAttribute("style", hasGuessed ? "" : "filter: blur(15px)");
+      if (hasGuessed) {
+        refreshButtons();
       }
-
-      image.setAttribute("style", hasGuessed ? "" : "filter: blur(15px)");
     });
 
     function refreshButtons() {
+      const userGuess = localStorage.getItem(today) || "";
       buttons.forEach((button) => {
-        const rightButton = button.getAttribute("value") === "yes";
-        if (rightButton) {
+        if (button.getAttribute("value")?.startsWith("yes")) {
           button.classList.add("is-success");
+        }
+
+        if (button.getAttribute("value") === `no|${userGuess}`) {
+          button.classList.add("is-danger");
         }
       });
     }
 
     buttons.forEach((button) => {
       button.addEventListener("click", () => {
-        const rightButton = button.getAttribute("value") === "yes";
-        localStorage.setItem(today, rightButton ? "correct" : "wrong");
-        button.classList.add(rightButton ? "is-success" : "is-danger");
+        const guess = button.getAttribute("value")?.split("|") || "";
+        const userGuess = guess[1];
+        localStorage.setItem(today, userGuess);
         refreshButtons();
+        image?.setAttribute("style", "");
       });
     });
   </script>
@@ -153,7 +155,7 @@ const todaysBird = birds[todaysIndex];
               guesses.map((g) => (
                 <button
                   class="button guess-button"
-                  value={g === todaysIndex ? "yes" : "no"}
+                  value={g === todaysIndex ? "yes" : "no" + "|" + g}
                 >
                   {birds[g]["vernacularName"]}
                 </button>
