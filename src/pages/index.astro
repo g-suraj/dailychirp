@@ -1,5 +1,4 @@
 ---
-import { Image } from "astro:assets";
 import Header from "../components/Header.astro";
 ---
 
@@ -14,16 +13,91 @@ import Header from "../components/Header.astro";
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
     />
-  </head>
+
+    <style is:global>
+      .styled-link {
+        text-decoration: underline;
+      }
+      .button[disabled] {
+        opacity: 1;
+      }
+
+      .image-container,
+      .credits-details-container,
+      .audio-container,
+      .result {
+        padding: 0;
+      }
+
+      .credits-details-container {
+        font-size: 10px;
+      }
+
+      .audio-container,
+      .result {
+        padding-top: 5px;
+      }
+
+      .result {
+        padding: 0 10px;
+      }
+
+      .bird-image {
+        box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+      }
+
+      @media (min-width: 900px) {
+        .bird-image {
+          width: 500px;
+        }
+
+        .bird-audio {
+          width: 500px;
+        }
+
+        .buttons-container {
+          width: 50%;
+          margin: 0 auto;
+        }
+
+        .button-div {
+          padding: 5px;
+        }
+      }
+
+      @media (min-width: 300px) and (max-width: 900px) {
+        .bird-audio,
+        .guess-button,
+        .buttons-container {
+          width: 100%;
+        }
+
+        .bird-image {
+          width: 100%;
+        }
+
+        .button-div {
+          width: 50%;
+          float: left;
+          padding: 0 5px;
+        }
+      }
+    </style></head
+  >
 
   <Header />
+
   <script>
     import type { Bird } from "../types/types";
 
     const today = new Date().toDateString();
+    const result = document.querySelector(".result");
     const image = document.querySelector(".bird-image");
     const audio = document.querySelector(".bird-audio");
     const buttonsContainer = document.querySelector(".buttons-container");
+    const creditsDetailsContainer = document.querySelector(
+      ".credits-details-container",
+    );
 
     async function stableStringToNumGenerator(
       str: string,
@@ -42,6 +116,7 @@ import Header from "../components/Header.astro";
         todayDateStr,
         numBirds,
       );
+      console.log(todaysIndex);
       let guesses: number[] = [];
       for (let i = 0; i < 3; ++i) {
         guesses.push((todaysIndex + i + 1) % numBirds);
@@ -65,81 +140,97 @@ import Header from "../components/Header.astro";
       );
 
       const todaysBird = birds[todaysIndex];
+      const occurenceIndex = guesses[0] % todaysBird["_occurrences"].length;
+      const pictureIndex = guesses[1] % todaysBird["_pictures"].length;
+      const todaysOccurence = todaysBird["_occurrences"][occurenceIndex];
+      const todaysPicture = todaysBird["_pictures"][pictureIndex];
 
-      image?.setAttribute("src", todaysBird["_pictures"][0]);
+      if (creditsDetailsContainer) {
+        creditsDetailsContainer.innerHTML += `Audio recording is courtesy of ${todaysOccurence["__rightsHolder"]}.`;
+      }
+
+      image?.setAttribute("src", todaysPicture);
       image?.removeAttribute("hidden");
-      audio?.setAttribute("src", todaysBird["_occurrences"][0]["__birdsong"]);
+      audio?.setAttribute("src", todaysOccurence["__birdsong"]);
 
       const hasGuessed = today in localStorage;
 
       guesses.forEach((guess: number) => {
         let btn = document.createElement("div");
+        btn.className = "button-div";
         btn.innerHTML += `
           <button 
-              style="opacity: 1"
               class="button guess-button"
               value="${guess === todaysIndex ? "yes" : "no"}|${guess}">${birds[guess]["vernacularName"]}
           </button>
         `;
         btn.addEventListener("click", () => {
           localStorage.setItem(today, `${guess}`);
-          refreshButtons();
+          refreshState();
           image?.setAttribute("style", "");
         });
         buttonsContainer?.appendChild(btn);
       });
 
       if (hasGuessed) {
-        refreshButtons();
+        refreshState();
       }
       image?.setAttribute("style", hasGuessed ? "" : "filter: blur(15px)");
+
+      function refreshState() {
+        const userGuess = localStorage.getItem(today) || "";
+        const buttons = document.querySelectorAll(".guess-button");
+        let userCorrectGuess = true;
+        buttons?.forEach((button) => {
+          if (button.getAttribute("value")?.startsWith("yes")) {
+            button.classList.add("is-success");
+          }
+
+          if (button.getAttribute("value") === `no|${userGuess}`) {
+            button.classList.add("is-danger");
+            userCorrectGuess = false;
+          }
+          button.setAttribute("disabled", "");
+        });
+
+        if (result) {
+          if (userCorrectGuess) {
+            result.innerHTML += "<b>That's right</b>!";
+          } else {
+            result.innerHTML += "<b>Tough luck!</b>";
+          }
+          result.innerHTML += `<br>What you hear is a "${birds[todaysIndex]["vernacularName"]}"<br>(<i>${birds[todaysIndex]["scientificName"]}</i>)`;
+          result.innerHTML +=
+            "<br><br><a class='styled-link' href='https://www.gbif.org/uk/species/2475532'>Click here</a> for more about this bird.";
+        }
+      }
     });
-
-    function refreshButtons() {
-      const userGuess = localStorage.getItem(today) || "";
-      const buttons = document.querySelectorAll(".guess-button");
-      buttons?.forEach((button) => {
-        if (button.getAttribute("value")?.startsWith("yes")) {
-          button.classList.add("is-success");
-        }
-
-        if (button.getAttribute("value") === `no|${userGuess}`) {
-          button.classList.add("is-danger");
-        }
-        button.setAttribute("disabled", "");
-      });
-    }
   </script>
 
   <body>
-    <section class="section">
+    <div class="loaded">
       <div class="columns is-centered is-multiline is-mobile">
         <div class="column is-full has-text-centered">
-          <div class="title is-4">What's the birdsong?</div>
+          <div class="title is-4" style="margin-top: 10px;">
+            Guess the Birdsong 🎶
+          </div>
         </div>
 
-        <div class="column is-full has-text-centered">
-          <Image
-            class="bird-image"
-            alt="A bird."
-            width="500"
-            inferSize
-            src="https://images.naturalis.nl/original/193834.jpg"
-            hidden="true"
-            style=""
-          />
+        <div class="column is-full has-text-centered image-container">
+          <img class="bird-image" alt="A bird." hidden />
         </div>
 
-        <div class="column is-narrow has-text-centered">
-          <audio controls style="width: inherit;" class="bird-audio"></audio>
+        <div class="column is-full has-text-centered credits-details-container">
+        </div>
+        <div class="column is-full has-text-centered audio-container">
+          <audio controls class="bird-audio"></audio>
         </div>
 
-        <div class="column is-full has-text-centered">
-          <div class="buttons is-centered buttons-container"></div>
+        <div class="column has-text-centered">
+          <div class="buttons buttons-container"></div>
         </div>
+        <div class="column is-full has-text-centered result"></div>
       </div>
-    </section>
+    </div>
   </body>
-
-
 </html>
