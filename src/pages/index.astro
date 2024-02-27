@@ -1,5 +1,7 @@
 ---
 import Header from "../components/Header.astro";
+import Audio from "../components/Audio.astro";
+import Loader from "../components/Loader.astro";
 ---
 
 <html lang="en">
@@ -15,6 +17,15 @@ import Header from "../components/Header.astro";
     />
 
     <style is:global>
+      .example::-webkit-scrollbar {
+        display: none;
+      }
+
+      .example {
+        -ms-overflow-style: none; /* IE and Edge */
+        scrollbar-width: none; /* Firefox */
+      }
+
       .styled-link {
         text-decoration: underline;
       }
@@ -63,11 +74,6 @@ import Header from "../components/Header.astro";
         .button-div {
           padding: 5px;
         }
-        .audiowrapper {
-          height: inherit;
-          width: 30%;
-          margin: 0 auto;
-        }
       }
 
       @media (min-width: 300px) and (max-width: 900px) {
@@ -84,20 +90,7 @@ import Header from "../components/Header.astro";
         .button-div {
           width: 50%;
           float: left;
-          padding: 0 5px;
         }
-        .audiowrapper {
-          height: inherit;
-          width: 100%;
-          margin: 0 auto;
-        }
-      }
-
-      .play,
-      .refresh {
-        height: inherit;
-        width: 50%;
-        float: left;
       }
 
       .audio-container {
@@ -106,12 +99,13 @@ import Header from "../components/Header.astro";
     </style></head
   >
 
-  <Header />
-
   <script>
     import type { Bird } from "../types/types";
 
     const today = new Date().toDateString();
+    const loading = document.querySelector(".loading");
+    const loaded = document.querySelector(".loaded");
+
     const result = document.querySelector(".result");
     const image = document.querySelector(".bird-image");
 
@@ -151,6 +145,11 @@ import Header from "../components/Header.astro";
     }
 
     window.addEventListener("load", async () => {
+      setTimeout(() => {
+        loading?.setAttribute("style", "display: none");
+        loaded?.removeAttribute("style");
+      }, 500);
+
       const data = await fetch(
         "https://g-suraj.github.io/xeno-canto-processed/pickled_data.json",
       );
@@ -178,21 +177,41 @@ import Header from "../components/Header.astro";
       image?.removeAttribute("hidden");
 
       refreshButton?.addEventListener("click", () => {
+        const wasPlaying = !audio?.paused;
         audio?.pause();
         occurenceIndex = Math.floor(
           Math.random() * todaysBird["_occurrences"].length,
         );
         todaysOccurence = todaysBird["_occurrences"][occurenceIndex];
         audio = new Audio(todaysOccurence["__birdsong"]);
-        audio?.play();
+        if (wasPlaying) {
+          audio?.play();
+        }
         if (creditsDetailsContainer) {
           creditsDetailsContainer.innerHTML = `Audio recording is courtesy of ${todaysOccurence["__rightsHolder"]}.`;
         }
       });
 
       playButton?.addEventListener("click", () => {
-        audio = new Audio(todaysOccurence["__birdsong"]);
-        audio.play();
+        if (!audio) {
+          audio = new Audio(todaysOccurence["__birdsong"]);
+        }
+
+        if (audio.paused) {
+          audio.play();
+        } else {
+          audio.pause();
+          audio.currentTime = 0;
+        }
+
+        // Ugly thing to toggle between play/pause
+        playButton
+          .getElementsByTagName("svg")[0]
+          .getElementsByTagName("path")[0]
+          .setAttribute(
+            "d",
+            audio.paused ? "M14 19V5h4v14zm-8 0V5h4v14z" : "M8 5.14v14l11-7z",
+          );
       });
 
       const hasGuessed = today in localStorage;
@@ -201,7 +220,7 @@ import Header from "../components/Header.astro";
         let btn = document.createElement("div");
         btn.className = "button-div";
         btn.innerHTML += `
-          <button 
+          <button
               class="button guess-button"
               value="${guess === todaysIndex ? "yes" : "no"}|${guess}">${birds[guess]["vernacularName"]}
           </button>
@@ -217,7 +236,10 @@ import Header from "../components/Header.astro";
       if (hasGuessed) {
         refreshState();
       }
-      image?.setAttribute("style", hasGuessed ? "" : "filter: blur(15px)");
+      image?.setAttribute(
+        "style",
+        hasGuessed ? "" : "filter: blur(15px) grayscale(100%);",
+      );
 
       function refreshState() {
         const userGuess = localStorage.getItem(today) || "";
@@ -249,7 +271,11 @@ import Header from "../components/Header.astro";
   </script>
 
   <body>
-    <div class="loaded">
+    <Header />
+    <div class="loading section has-text-centered is-centered">
+      <Loader />
+    </div>
+    <div class="loaded" style="display: none;">
       <div class="columns is-centered is-multiline is-mobile">
         <div class="column is-full has-text-centered">
           <div class="title is-4" style="margin-top: 10px;">
@@ -264,29 +290,7 @@ import Header from "../components/Header.astro";
         <div class="column is-full has-text-centered credits-details-container">
         </div>
         <div class="column is-full has-text-centered audio-container">
-          <div class="audiowrapper">
-            <div class="play">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="100%"
-                height="100%"
-                viewBox="0 0 24 24"
-                ><path fill="currentColor" d="M8 5.14v14l11-7z"></path></svg
-              >
-            </div>
-            <div class="refresh">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="100%"
-                height="100%"
-                ><path
-                  fill="currentColor"
-                  d="M12 20q-3.35 0-5.675-2.325T4 12q0-3.35 2.325-5.675T12 4q1.725 0 3.3.712T18 6.75V4h2v7h-7V9h4.2q-.8-1.4-2.187-2.2T12 6Q9.5 6 7.75 7.75T6 12q0 2.5 1.75 4.25T12 18q1.925 0 3.475-1.1T17.65 14h2.1q-.7 2.65-2.85 4.325T12 20"
-                ></path></svg
-              >
-            </div>
-          </div>
+          <Audio />
         </div>
 
         <div class="column has-text-centered">

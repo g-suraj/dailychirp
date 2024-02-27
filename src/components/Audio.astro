@@ -1,0 +1,66 @@
+---
+
+---
+
+<script></script>
+
+<style>
+  @media (min-width: 900px) {
+    .audiowrapper {
+      height: inherit;
+      width: 30%;
+      margin: 0 auto;
+    }
+  }
+
+  @media (min-width: 300px) and (max-width: 900px) {
+    .audiowrapper {
+      height: inherit;
+      width: 100%;
+      margin: 0 auto;
+    }
+  }
+
+  .play,
+  .refresh {
+    height: inherit;
+    width: 36%;
+    float: left;
+    border: 1px double #878787;
+    border-radius: 35px;
+    margin: 0 7%;
+
+    -webkit-transition: background 0.1s linear;
+    -moz-transition: background 0.1s linear;
+    -o-transition: background 0.1s linear;
+    transition: background 0.1s linear;
+  }
+  .play:active,
+  .refresh:active {
+    background: #e5e5e5;
+  }
+</style>
+
+<div class="audiowrapper">
+  <div class="play">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="100%"
+      height="100%"
+      viewBox="0 0 24 24"
+      ><path fill="currentColor" d="M8 5.14v14l11-7z"></path></svg
+    >
+  </div>
+  <div class="refresh">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width="100%"
+      height="100%"
+      ><path
+        fill="currentColor"
+        d="M12 20q-3.35 0-5.675-2.325T4 12q0-3.35 2.325-5.675T12 4q1.725 0 3.3.712T18 6.75V4h2v7h-7V9h4.2q-.8-1.4-2.187-2.2T12 6Q9.5 6 7.75 7.75T6 12q0 2.5 1.75 4.25T12 18q1.925 0 3.475-1.1T17.65 14h2.1q-.7 2.65-2.85 4.325T12 20"
+      ></path></svg
+    >
+  </div>
+</div>
