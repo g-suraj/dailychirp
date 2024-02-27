@@ -46,7 +46,7 @@ import Loader from "../components/Loader.astro";
 
       .audio-container,
       .result {
-        margin-top: 5px;
+        margin-top: 3px;
       }
 
       .result {
@@ -84,7 +84,7 @@ import Loader from "../components/Loader.astro";
         }
 
         .bird-image {
-          width: 100%;
+          width: 70%;
         }
 
         .button-div {
@@ -94,7 +94,7 @@ import Loader from "../components/Loader.astro";
       }
 
       .audio-container {
-        height: 8vh;
+        height: 6vh;
       }
     </style></head
   >
@@ -264,7 +264,7 @@ import Loader from "../components/Loader.astro";
             result.innerHTML += "<b>Tough luck!</b>";
           }
           result.innerHTML += `<br>What you hear is a "${birds[todaysIndex]["vernacularName"]}"<br>(<i>${birds[todaysIndex]["scientificName"]}</i>)`;
-          result.innerHTML += `<br><br><a class='styled-link' href='https://www.gbif.org/species/${todaysOccurence["speciesKey"]}'>Click here</a> for more about this bird.`;
+          result.innerHTML += `<br><a class='styled-link' href='https://www.gbif.org/species/${todaysOccurence["speciesKey"]}'>Click here</a> for more about this bird.`;
         }
       }
     });
@@ -293,7 +293,7 @@ import Loader from "../components/Loader.astro";
           <Audio />
         </div>
 
-        <div class="column has-text-centered">
+        <div class="column has-text-centered" style="padding-bottom: 0;">
           <div class="is-centered buttons buttons-container"></div>
         </div>
         <div class="column is-full has-text-centered result"></div>
