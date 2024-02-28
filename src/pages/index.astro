@@ -151,7 +151,7 @@ import Loader from "../components/Loader.astro";
       }, 500);
 
       const data = await fetch(
-        "https://g-suraj.github.io/xeno-canto-processed/pickled_data.json",
+        "https://suraj.fyi/xeno-canto-processed/pickled_data.json",
       );
       let audio: HTMLAudioElement | null = null;
       const birds: Bird[] = await data.json();
