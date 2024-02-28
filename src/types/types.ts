@@ -21,6 +21,7 @@ export type Bird = {
   family: string;
   genus: string;
   vernacularName: string;
+  speciesKey: string;
   _pictures: string[];
   _occurrences: Occurence[];
 };
