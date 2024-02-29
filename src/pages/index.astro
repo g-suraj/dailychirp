@@ -2,6 +2,7 @@
 import Header from "../components/Header.astro";
 import Audio from "../components/Audio.astro";
 import Loader from "../components/Loader.astro";
+import "../styles/global.css";
 ---
 
 <html lang="en">
@@ -15,218 +16,130 @@ import Loader from "../components/Loader.astro";
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
     />
-
-    <style is:global>
-      .example::-webkit-scrollbar {
-        display: none;
-      }
-
-      .example {
-        -ms-overflow-style: none; /* IE and Edge */
-        scrollbar-width: none; /* Firefox */
-      }
-
-      .styled-link {
-        text-decoration: underline;
-      }
-      .button[disabled] {
-        opacity: 1;
-      }
-
-      .image-container,
-      .credits-details-container,
-      .audio-container,
-      .result {
-        padding: 0;
-      }
-
-      .credits-details-container {
-        font-size: 10px;
-      }
-
-      .audio-container,
-      .result {
-        margin-top: 3px;
-      }
-
-      .result {
-        padding: 0 10px;
-      }
-
-      .bird-image {
-        box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
-      }
-
-      @media (min-width: 900px) {
-        .bird-image {
-          width: 500px;
-        }
-
-        .bird-audio {
-          width: 500px;
-        }
-
-        .buttons-container {
-          width: 50%;
-          margin: 0 auto;
-        }
-
-        .button-div {
-          padding: 5px;
-        }
-      }
-
-      @media (min-width: 300px) and (max-width: 900px) {
-        .bird-audio,
-        .guess-button,
-        .buttons-container {
-          width: 100%;
-        }
-
-        .bird-image {
-          width: 70%;
-        }
-
-        .button-div {
-          width: 50%;
-          float: left;
-        }
-      }
-
-      .audio-container {
-        height: 6vh;
-      }
-    </style></head
-  >
+  </head>>
 
   <script>
-    import type { Bird } from "../types/types";
+    import { todaysGuesses } from "../scripts/guess_generator";
+    import type { Bird, Guess } from "../types/types";
 
     const today = new Date().toDateString();
-    const loading = document.querySelector(".loading");
     const loaded = document.querySelector(".loaded");
-
     const result = document.querySelector(".result");
     const image = document.querySelector(".bird-image");
-
     const playButton = document.querySelector(".play");
     const refreshButton = document.querySelector(".refresh");
-
     const buttonsContainer = document.querySelector(".buttons-container");
-    const creditsDetailsContainer = document.querySelector(
-      ".credits-details-container",
-    );
 
-    async function stableStringToNumGenerator(
-      str: string,
-      modulo: number,
-    ): Promise<number> {
-      /* Generate stable random numbers which are index into the birds object */
-      const msgUint8 = new TextEncoder().encode(str);
-      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.reduce((prev, curr) => prev * curr) % modulo;
-    }
+    const hasGuessed = today in localStorage;
 
-    /* Helper to generate today's guesses in a stable manner */
-    async function todaysGuesses(todayDateStr: string, numBirds: number) {
-      const todaysIndex = await stableStringToNumGenerator(
-        todayDateStr,
-        numBirds,
-      );
-      console.log(todaysIndex);
-      let guesses: number[] = [];
-      for (let i = 0; i < 3; ++i) {
-        guesses.push((todaysIndex + i + 1) % numBirds);
-      }
-      const insertionIndex = Math.floor(Math.random() * 4);
-      guesses.splice(insertionIndex, 0, todaysIndex);
-      return { todaysIndex, guesses };
-    }
+    image?.addEventListener("load", () => {
+      document
+        .querySelector(".loading")
+        ?.setAttribute("style", "display: none");
+      loaded?.removeAttribute("style");
+    });
 
     window.addEventListener("load", async () => {
-      setTimeout(() => {
-        loading?.setAttribute("style", "display: none");
-        loaded?.removeAttribute("style");
-      }, 500);
-
       const data = await fetch(
         "https://suraj.fyi/xeno-canto-processed/pickled_data.json",
       );
-      let audio: HTMLAudioElement | null = null;
       const birds: Bird[] = await data.json();
-      const numBirds = birds.length;
-
-      const todayDateStr = new Date().toDateString();
-      const { todaysIndex, guesses } = await todaysGuesses(
-        todayDateStr,
-        numBirds,
+      const { todaysIndex, guesses: guessIndices } = await todaysGuesses(
+        today,
+        birds.length,
       );
-
       const todaysBird = birds[todaysIndex];
-      const pictureIndex = guesses[1] % todaysBird["_pictures"].length;
+      const pictureIndex = todaysIndex ** 2 % todaysBird["_pictures"].length;
       const todaysPicture = todaysBird["_pictures"][pictureIndex];
-      let occurenceIndex = guesses[0] % todaysBird["_occurrences"].length;
+      let occurenceIndex = todaysIndex ** 3 % todaysBird["_occurrences"].length;
       let todaysOccurence = todaysBird["_occurrences"][occurenceIndex];
+      let audio: HTMLAudioElement = new Audio(todaysOccurence["__birdsong"]);
 
-      if (creditsDetailsContainer) {
-        creditsDetailsContainer.innerHTML = `Audio recording is courtesy of ${todaysOccurence["__rightsHolder"]}.`;
-      }
+      const setCredits = function (occurenceIndex: number) {
+        const creditsDetailsContainer = document.querySelector(
+          ".credits-details-container",
+        );
+
+        if (!creditsDetailsContainer) {
+          return;
+        }
+
+        creditsDetailsContainer.innerHTML = `Audio recording is courtesy of 
+            ${todaysOccurence["__rightsHolder"]}. (Recording #${occurenceIndex} 
+            out of ${todaysBird["_occurrences"].length})`;
+      };
+      setCredits(occurenceIndex);
 
       image?.setAttribute("src", todaysPicture);
       image?.removeAttribute("hidden");
 
       refreshButton?.addEventListener("click", () => {
-        const wasPlaying = !audio?.paused;
-        audio?.pause();
-        occurenceIndex = Math.floor(
+        const newOccurrence = Math.floor(
           Math.random() * todaysBird["_occurrences"].length,
         );
-        todaysOccurence = todaysBird["_occurrences"][occurenceIndex];
-        audio = new Audio(todaysOccurence["__birdsong"]);
-        if (wasPlaying) {
-          audio?.play();
-        }
-        if (creditsDetailsContainer) {
-          creditsDetailsContainer.innerHTML = `Audio recording is courtesy of ${todaysOccurence["__rightsHolder"]}.`;
-        }
-      });
+        todaysOccurence = todaysBird["_occurrences"][newOccurrence];
+        setCredits(newOccurrence);
 
-      playButton?.addEventListener("click", () => {
-        if (!audio) {
-          audio = new Audio(todaysOccurence["__birdsong"]);
-        }
-
-        if (audio.paused) {
-          audio.play();
-        } else {
-          audio.pause();
-          audio.currentTime = 0;
-        }
-
-        // Ugly thing to toggle between play/pause
-        playButton
+        const oldSvg = refreshButton
+          .getElementsByTagName("svg")[0]
+          .getElementsByTagName("path")[0]
+          .getAttribute("d");
+        refreshButton
           .getElementsByTagName("svg")[0]
           .getElementsByTagName("path")[0]
           .setAttribute(
             "d",
-            audio.paused ? "M14 19V5h4v14zm-8 0V5h4v14z" : "M8 5.14v14l11-7z",
+            "M4 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0m7 0a1 1 0 1 0 2 0a1 1 0 1 0-2 0m7 0a1 1 0 1 0 2 0a1 1 0 1 0-2 0",
           );
+
+        setTimeout(() => {
+          refreshButton
+            .getElementsByTagName("svg")[0]
+            .getElementsByTagName("path")[0]
+            .setAttribute("d", oldSvg || "");
+        }, 200);
+
+        const wasPlaying = !audio.paused;
+        audio.pause();
+        audio = new Audio(todaysOccurence["__birdsong"]);
+        if (wasPlaying) {
+          audio?.play();
+        }
       });
 
-      const hasGuessed = today in localStorage;
+      playButton?.addEventListener("click", () => {
+        playButton // Ugly thing to toggle between play/pause
+          .getElementsByTagName("svg")[0]
+          .getElementsByTagName("path")[0]
+          .setAttribute(
+            "d",
+            audio.paused ? "M8 5.14v14l11-7z" : "M14 19V5h4v14zm-8 0V5h4v14z",
+          );
 
-      guesses.forEach((guess: number) => {
-        let btn = document.createElement("div");
+        if (audio.paused) {
+          audio.play();
+          return;
+        }
+
+        audio.pause();
+        audio.currentTime = 0;
+      });
+
+      guessIndices.forEach((guess: number) => {
+        const btn = document.createElement("div");
         btn.className = "button-div";
         btn.innerHTML += `
           <button
               class="button guess-button"
-              value="${guess === todaysIndex ? "yes" : "no"}|${guess}">${birds[guess]["vernacularName"]}
+              value="${guess}">${birds[guess]["vernacularName"]}
           </button>
         `;
         btn.addEventListener("click", () => {
-          localStorage.setItem(today, `${guess}`);
+          const todaysGuess: Guess = {
+            todaysIndex: `${todaysIndex}`,
+            yourGuess: `${guess}`,
+          };
+          localStorage.setItem(today, JSON.stringify(todaysGuess));
           refreshState();
           image?.setAttribute("style", "");
         });
@@ -238,21 +151,23 @@ import Loader from "../components/Loader.astro";
       }
       image?.setAttribute(
         "style",
-        hasGuessed ? "" : "filter: blur(15px) grayscale(100%);",
+        hasGuessed
+          ? "image-rendering: pixelated"
+          : "filter: blur(20px) grayscale(100%);",
       );
 
       function refreshState() {
-        const userGuess = localStorage.getItem(today) || "";
-        const buttons = document.querySelectorAll(".guess-button");
-        let userCorrectGuess = true;
-        buttons?.forEach((button) => {
-          if (button.getAttribute("value")?.startsWith("yes")) {
-            button.classList.add("is-success");
-          }
+        const userGuess: Guess = JSON.parse(
+          localStorage.getItem(today) || "{}",
+        );
+        const userCorrectGuess =
+          userGuess["todaysIndex"] == userGuess["yourGuess"];
 
-          if (button.getAttribute("value") === `no|${userGuess}`) {
+        document.querySelectorAll(".guess-button")?.forEach((button) => {
+          if (button.getAttribute("value") == userGuess["todaysIndex"]) {
+            button.classList.add("is-success");
+          } else if (button.getAttribute("value") == userGuess["yourGuess"]) {
             button.classList.add("is-danger");
-            userCorrectGuess = false;
           }
           button.setAttribute("disabled", "");
         });
@@ -279,7 +194,7 @@ import Loader from "../components/Loader.astro";
       <div class="columns is-centered is-multiline is-mobile">
         <div class="column is-full has-text-centered">
           <div class="title is-4" style="margin-top: 10px;">
-            Guess the Birdsong 🎶
+            🎶 Guess the Birdsong 🎶
           </div>
         </div>
 
@@ -300,4 +215,6 @@ import Loader from "../components/Loader.astro";
       </div>
     </div>
   </body>
+
+
 </html>

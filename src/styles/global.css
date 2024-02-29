@@ -1,0 +1,79 @@
+.example::-webkit-scrollbar {
+  display: none;
+}
+
+.example {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.styled-link {
+  text-decoration: underline;
+}
+.button[disabled] {
+  opacity: 1;
+}
+
+.image-container,
+.credits-details-container,
+.audio-container,
+.result {
+  padding: 0;
+}
+
+.credits-details-container {
+  font-size: 10px;
+}
+
+.audio-container,
+.result {
+  margin-top: 3px;
+}
+
+.result {
+  padding: 0 10px;
+}
+
+.bird-image {
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+@media (min-width: 900px) {
+  .bird-image {
+    width: 500px;
+  }
+
+  .bird-audio {
+    width: 500px;
+  }
+
+  .buttons-container {
+    width: 50%;
+    margin: 0 auto;
+  }
+
+  .button-div {
+    padding: 5px;
+  }
+}
+
+@media (min-width: 300px) and (max-width: 900px) {
+  .bird-audio,
+  .guess-button,
+  .buttons-container {
+    width: 100%;
+  }
+
+  .bird-image {
+    width: 70%;
+  }
+
+  .button-div {
+    width: 50%;
+    float: left;
+  }
+}
+
+.audio-container {
+  height: 6vh;
+}

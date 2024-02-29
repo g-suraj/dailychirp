@@ -25,3 +25,8 @@ export type Bird = {
   _pictures: string[];
   _occurrences: Occurence[];
 };
+
+export type Guess = {
+  todaysIndex: string;
+  yourGuess: string;
+};
