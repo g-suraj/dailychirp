@@ -1,4 +1,5 @@
 ---
+import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import Audio from "../components/Audio.astro";
 import Loader from "../components/Loader.astro";
@@ -67,8 +68,8 @@ import "../styles/global.css";
             return;
           }
 
-          creditsDetailsContainer.innerHTML = `Audio recording is courtesy of 
-            ${todaysOccurence["__rightsHolder"]}. (Recording #${occurenceIndex} 
+          creditsDetailsContainer.innerHTML = `Audio recording is courtesy of
+            ${todaysOccurence["__rightsHolder"]}. (Recording #${occurenceIndex + 1}
             out of ${todaysBird["_occurrences"].length})`;
         };
         setCredits(occurenceIndex);
@@ -121,7 +122,7 @@ import "../styles/global.css";
             .getElementsByTagName("path")[0]
             .setAttribute(
               "d",
-              audio.paused ? "M8 5.14v14l11-7z" : "M14 19V5h4v14zm-8 0V5h4v14z",
+              audio.paused ? "M14 19V5h4v14zm-8 0V5h4v14z" : "M8 5.14v14l11-7z",
             );
 
           if (audio.paused) {
@@ -220,10 +221,11 @@ import "../styles/global.css";
         </div>
 
         <div class="column has-text-centered" style="padding-bottom: 0;">
-          <div class="is-centered buttons buttons-container"></div>
+          <div class="is-centered buttons-container"></div>
         </div>
         <div class="column is-full has-text-centered result"></div>
       </div>
     </div>
+    <!-- <Footer /> -->
   </body>
 </html>

@@ -40,6 +40,10 @@
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
 
+.audio-container {
+  height: 6vh;
+}
+
 @media (min-width: 900px) {
   .bird-image {
     width: 500px;
@@ -55,7 +59,12 @@
   }
 
   .button-div {
-    padding: 5px;
+    width: 50%;
+    float: left;
+  }
+
+  .guess-button {
+    width: 100%;
   }
 }
 
@@ -66,6 +75,10 @@
     width: 100%;
   }
 
+  .buttons-container {
+    padding: 0 1%;
+  }
+
   .bird-image {
     width: 70%;
   }
@@ -74,8 +87,4 @@
     width: 50%;
     float: left;
   }
-}
-
-.audio-container {
-  height: 6vh;
 }

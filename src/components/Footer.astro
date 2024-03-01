@@ -1,0 +1,37 @@
+---
+
+---
+
+<style>
+  .navbar {
+    overflow: hidden;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+  }
+
+  button {
+    width: 50%;
+  }
+
+  @media (min-width: 900px) {
+    .navbar {
+      width: 50%;
+      margin-left: 25%;
+    }
+  }
+
+  @media (min-width: 300px) and (max-width: 900px) {
+    .navbar {
+      width: 100%;
+    }
+  }
+
+  button {
+    float: left;
+  }
+</style>
+<div class="navbar">
+  <button class="button is-primary">Today's Guess</button>
+  <button class="button">My Birds</button>
+</div>
