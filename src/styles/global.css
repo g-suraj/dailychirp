@@ -15,12 +15,14 @@
 }
 
 .image-container,
+.image-details-container,
 .credits-details-container,
 .audio-container,
 .result {
   padding: 0;
 }
 
+.image-details-container,
 .credits-details-container {
   font-size: 10px;
 }

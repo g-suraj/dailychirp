@@ -16,174 +16,183 @@ import "../styles/global.css";
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
     />
-  </head>>
+    <script>
+      import { todaysGuesses } from "../scripts/guess_generator";
+      import type { Bird, Guess } from "../types/types";
 
-  <script>
-    import { todaysGuesses } from "../scripts/guess_generator";
-    import type { Bird, Guess } from "../types/types";
+      const today = new Date().toDateString();
+      const loaded = document.querySelector(".loaded");
+      const result = document.querySelector(".result");
+      const image = document.querySelector(".bird-image");
+      const playButton = document.querySelector(".play");
+      const refreshButton = document.querySelector(".refresh");
+      const buttonsContainer = document.querySelector(".buttons-container");
 
-    const today = new Date().toDateString();
-    const loaded = document.querySelector(".loaded");
-    const result = document.querySelector(".result");
-    const image = document.querySelector(".bird-image");
-    const playButton = document.querySelector(".play");
-    const refreshButton = document.querySelector(".refresh");
-    const buttonsContainer = document.querySelector(".buttons-container");
+      const hasGuessed = today in localStorage;
 
-    const hasGuessed = today in localStorage;
+      image?.addEventListener("load", () => {
+        document
+          .querySelector(".loading")
+          ?.setAttribute("style", "display: none");
+        loaded?.removeAttribute("style");
+      });
 
-    image?.addEventListener("load", () => {
-      document
-        .querySelector(".loading")
-        ?.setAttribute("style", "display: none");
-      loaded?.removeAttribute("style");
-    });
-
-    window.addEventListener("load", async () => {
-      const data = await fetch(
-        "https://suraj.fyi/xeno-canto-processed/pickled_data.json",
-      );
-      const birds: Bird[] = await data.json();
-      const { todaysIndex, guesses: guessIndices } = await todaysGuesses(
-        today,
-        birds.length,
-      );
-      const todaysBird = birds[todaysIndex];
-      const pictureIndex = todaysIndex ** 2 % todaysBird["_pictures"].length;
-      const todaysPicture = todaysBird["_pictures"][pictureIndex];
-      let occurenceIndex = todaysIndex ** 3 % todaysBird["_occurrences"].length;
-      let todaysOccurence = todaysBird["_occurrences"][occurenceIndex];
-      let audio: HTMLAudioElement = new Audio(todaysOccurence["__birdsong"]);
-
-      const setCredits = function (occurenceIndex: number) {
-        const creditsDetailsContainer = document.querySelector(
-          ".credits-details-container",
+      window.addEventListener("load", async () => {
+        const data = await fetch(
+          "https://suraj.fyi/xeno-canto-processed/pickled_data.json",
         );
-
-        if (!creditsDetailsContainer) {
-          return;
+        const birds: Bird[] = await data.json();
+        const { todaysIndex, guesses: guessIndices } = await todaysGuesses(
+          today,
+          birds.length,
+        );
+        const todaysBird = birds[todaysIndex];
+        const pictureIndex = todaysIndex ** 2 % todaysBird["_pictures"].length;
+        const todaysPicture = todaysBird["_pictures"][pictureIndex];
+        let occurenceIndex =
+          todaysIndex ** 3 % todaysBird["_occurrences"].length;
+        let todaysOccurence = todaysBird["_occurrences"][occurenceIndex];
+        let audio: HTMLAudioElement = new Audio(todaysOccurence["__birdsong"]);
+        const imageDetails = document.querySelector(".image-details-container");
+        if (imageDetails) {
+          imageDetails.innerHTML = `Image is courtesy of ${todaysPicture["rightsHolder"]}`;
         }
 
-        creditsDetailsContainer.innerHTML = `Audio recording is courtesy of 
-            ${todaysOccurence["__rightsHolder"]}. (Recording #${occurenceIndex} 
-            out of ${todaysBird["_occurrences"].length})`;
-      };
-      setCredits(occurenceIndex);
-
-      image?.setAttribute("src", todaysPicture);
-      image?.removeAttribute("hidden");
-
-      refreshButton?.addEventListener("click", () => {
-        const newOccurrence = Math.floor(
-          Math.random() * todaysBird["_occurrences"].length,
-        );
-        todaysOccurence = todaysBird["_occurrences"][newOccurrence];
-        setCredits(newOccurrence);
-
-        const oldSvg = refreshButton
-          .getElementsByTagName("svg")[0]
-          .getElementsByTagName("path")[0]
-          .getAttribute("d");
-        refreshButton
-          .getElementsByTagName("svg")[0]
-          .getElementsByTagName("path")[0]
-          .setAttribute(
-            "d",
-            "M4 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0m7 0a1 1 0 1 0 2 0a1 1 0 1 0-2 0m7 0a1 1 0 1 0 2 0a1 1 0 1 0-2 0",
+        const setCredits = function (occurenceIndex: number) {
+          const creditsDetailsContainer = document.querySelector(
+            ".credits-details-container",
           );
 
-        setTimeout(() => {
+          if (!creditsDetailsContainer) {
+            return;
+          }
+
+          creditsDetailsContainer.innerHTML = `Audio recording is courtesy of 
+            ${todaysOccurence["__rightsHolder"]}. (Recording #${occurenceIndex} 
+            out of ${todaysBird["_occurrences"].length})`;
+        };
+        setCredits(occurenceIndex);
+
+        image?.setAttribute(
+          "src",
+          todaysBird["_pictures"].length
+            ? todaysPicture["src"]
+            : "https://www.stockvault.net/data/2018/09/18/254636/preview16.jpg",
+        );
+        image?.removeAttribute("hidden");
+
+        refreshButton?.addEventListener("click", () => {
+          const newOccurrence = Math.floor(
+            Math.random() * todaysBird["_occurrences"].length,
+          );
+          todaysOccurence = todaysBird["_occurrences"][newOccurrence];
+          setCredits(newOccurrence);
+
+          const oldSvg = refreshButton
+            .getElementsByTagName("svg")[0]
+            .getElementsByTagName("path")[0]
+            .getAttribute("d");
           refreshButton
             .getElementsByTagName("svg")[0]
             .getElementsByTagName("path")[0]
-            .setAttribute("d", oldSvg || "");
-        }, 200);
+            .setAttribute(
+              "d",
+              "M4 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0m7 0a1 1 0 1 0 2 0a1 1 0 1 0-2 0m7 0a1 1 0 1 0 2 0a1 1 0 1 0-2 0",
+            );
 
-        const wasPlaying = !audio.paused;
-        audio.pause();
-        audio = new Audio(todaysOccurence["__birdsong"]);
-        if (wasPlaying) {
-          audio?.play();
-        }
-      });
+          setTimeout(() => {
+            refreshButton
+              .getElementsByTagName("svg")[0]
+              .getElementsByTagName("path")[0]
+              .setAttribute("d", oldSvg || "");
+          }, 200);
 
-      playButton?.addEventListener("click", () => {
-        playButton // Ugly thing to toggle between play/pause
-          .getElementsByTagName("svg")[0]
-          .getElementsByTagName("path")[0]
-          .setAttribute(
-            "d",
-            audio.paused ? "M8 5.14v14l11-7z" : "M14 19V5h4v14zm-8 0V5h4v14z",
-          );
+          const wasPlaying = !audio.paused;
+          audio.pause();
+          audio = new Audio(todaysOccurence["__birdsong"]);
+          if (wasPlaying) {
+            audio?.play();
+          }
+        });
 
-        if (audio.paused) {
-          audio.play();
-          return;
-        }
+        playButton?.addEventListener("click", () => {
+          playButton // Ugly thing to toggle between play/pause
+            .getElementsByTagName("svg")[0]
+            .getElementsByTagName("path")[0]
+            .setAttribute(
+              "d",
+              audio.paused ? "M8 5.14v14l11-7z" : "M14 19V5h4v14zm-8 0V5h4v14z",
+            );
 
-        audio.pause();
-        audio.currentTime = 0;
-      });
+          if (audio.paused) {
+            audio.play();
+            return;
+          }
 
-      guessIndices.forEach((guess: number) => {
-        const btn = document.createElement("div");
-        btn.className = "button-div";
-        btn.innerHTML += `
+          audio.pause();
+          audio.currentTime = 0;
+        });
+
+        guessIndices.forEach((guess: number) => {
+          const btn = document.createElement("div");
+          btn.className = "button-div";
+          btn.innerHTML += `
           <button
               class="button guess-button"
               value="${guess}">${birds[guess]["vernacularName"]}
           </button>
         `;
-        btn.addEventListener("click", () => {
-          const todaysGuess: Guess = {
-            todaysIndex: `${todaysIndex}`,
-            yourGuess: `${guess}`,
-          };
-          localStorage.setItem(today, JSON.stringify(todaysGuess));
+          btn.addEventListener("click", () => {
+            const todaysGuess: Guess = {
+              todaysIndex: `${todaysIndex}`,
+              yourGuess: `${guess}`,
+            };
+            localStorage.setItem(today, JSON.stringify(todaysGuess));
+            refreshState();
+            image?.setAttribute("style", "");
+          });
+          buttonsContainer?.appendChild(btn);
+        });
+
+        if (hasGuessed) {
           refreshState();
-          image?.setAttribute("style", "");
-        });
-        buttonsContainer?.appendChild(btn);
-      });
-
-      if (hasGuessed) {
-        refreshState();
-      }
-      image?.setAttribute(
-        "style",
-        hasGuessed
-          ? "image-rendering: pixelated"
-          : "filter: blur(20px) grayscale(100%);",
-      );
-
-      function refreshState() {
-        const userGuess: Guess = JSON.parse(
-          localStorage.getItem(today) || "{}",
-        );
-        const userCorrectGuess =
-          userGuess["todaysIndex"] == userGuess["yourGuess"];
-
-        document.querySelectorAll(".guess-button")?.forEach((button) => {
-          if (button.getAttribute("value") == userGuess["todaysIndex"]) {
-            button.classList.add("is-success");
-          } else if (button.getAttribute("value") == userGuess["yourGuess"]) {
-            button.classList.add("is-danger");
-          }
-          button.setAttribute("disabled", "");
-        });
-
-        if (result) {
-          if (userCorrectGuess) {
-            result.innerHTML += "<b>That's right</b>!";
-          } else {
-            result.innerHTML += "<b>Tough luck!</b>";
-          }
-          result.innerHTML += `<br>What you hear is a "${birds[todaysIndex]["vernacularName"]}"<br>(<i>${birds[todaysIndex]["scientificName"]}</i>)`;
-          result.innerHTML += `<br><a class='styled-link' href='https://www.gbif.org/species/${todaysBird["speciesKey"]}'>Click here</a> for more about this bird.`;
         }
-      }
-    });
-  </script>
+        image?.setAttribute(
+          "style",
+          hasGuessed
+            ? "image-rendering: pixelated"
+            : "filter: blur(20px) grayscale(100%);",
+        );
+
+        function refreshState() {
+          const userGuess: Guess = JSON.parse(
+            localStorage.getItem(today) || "{}",
+          );
+          const userCorrectGuess =
+            userGuess["todaysIndex"] == userGuess["yourGuess"];
+
+          document.querySelectorAll(".guess-button")?.forEach((button) => {
+            if (button.getAttribute("value") == userGuess["todaysIndex"]) {
+              button.classList.add("is-success");
+            } else if (button.getAttribute("value") == userGuess["yourGuess"]) {
+              button.classList.add("is-danger");
+            }
+            button.setAttribute("disabled", "");
+          });
+
+          if (result) {
+            if (userCorrectGuess) {
+              result.innerHTML += "<b>That's right</b>!";
+            } else {
+              result.innerHTML += "<b>Tough luck!</b>";
+            }
+            result.innerHTML += `<br>What you hear is a "${birds[todaysIndex]["vernacularName"]}"<br>(<i>${birds[todaysIndex]["scientificName"]}</i>)`;
+            result.innerHTML += `<br><a class='styled-link' href='https://www.gbif.org/species/${todaysBird["speciesKey"]}'>Click here</a> for more about this bird.`;
+          }
+        }
+      });
+    </script></head
+  >
 
   <body>
     <Header />
@@ -202,6 +211,8 @@ import "../styles/global.css";
           <img class="bird-image" alt="A bird." hidden />
         </div>
 
+        <div class="column is-full has-text-centered image-details-container">
+        </div>
         <div class="column is-full has-text-centered credits-details-container">
         </div>
         <div class="column is-full has-text-centered audio-container">
@@ -215,6 +226,4 @@ import "../styles/global.css";
       </div>
     </div>
   </body>
-
-
 </html>

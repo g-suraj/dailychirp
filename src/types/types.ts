@@ -22,11 +22,16 @@ export type Bird = {
   genus: string;
   vernacularName: string;
   speciesKey: string;
-  _pictures: string[];
+  _pictures: Picture[];
   _occurrences: Occurence[];
 };
 
 export type Guess = {
   todaysIndex: string;
   yourGuess: string;
+};
+
+export type Picture = {
+  src: string;
+  rightsHolder: string;
 };
