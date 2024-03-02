@@ -17,8 +17,13 @@ import "../styles/global.css";
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
     />
+    <script
+      is:inline
+      src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"
+    ></script>
     <script>
       import { todaysGuesses } from "../scripts/guess_generator";
+
       import type { Bird, Guess } from "../types/types";
 
       const today = new Date().toDateString();
@@ -171,6 +176,14 @@ import "../styles/global.css";
           );
           const userCorrectGuess =
             userGuess["todaysIndex"] == userGuess["yourGuess"];
+
+          if (userCorrectGuess) {
+            (window as any).confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 },
+            });
+          }
 
           document.querySelectorAll(".guess-button")?.forEach((button) => {
             if (button.getAttribute("value") == userGuess["todaysIndex"]) {
