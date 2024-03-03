@@ -13,9 +13,11 @@
   "dependencies": {
     "@astrojs/check": "^0.5.4",
     "astro": "^4.4.0",
+    "canvas-confetti": "^1.9.2",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
+    "@types/canvas-confetti": "^1.6.4",
     "prettier": "^3.2.5",
     "prettier-plugin-astro": "^0.13.0"
   }
