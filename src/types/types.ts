@@ -1,4 +1,4 @@
-type Occurence = {
+export type Occurence = {
   __birdsong: string;
   __license: string;
   __rightsHolder: string;
@@ -34,4 +34,10 @@ export type Guess = {
 export type Picture = {
   src: string;
   rightsHolder: string;
+};
+
+export type AudioProps = {
+  name: string;
+  occurrences: Occurence[];
+  current: number;
 };

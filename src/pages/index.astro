@@ -1,7 +1,7 @@
 ---
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
-import Audio from "../components/Audio.astro";
+import AudioRefresh from "../components/AudioRefresh.astro";
 import Loader from "../components/Loader.astro";
 import "../styles/global.css";
 ---
@@ -23,15 +23,12 @@ import "../styles/global.css";
     ></script>
     <script>
       import { todaysGuesses } from "../scripts/guess_generator";
-
       import type { Bird, Guess } from "../types/types";
 
       const today = new Date().toDateString();
       const loaded = document.querySelector(".loaded");
       const result = document.querySelector(".result");
       const image = document.querySelector(".bird-image");
-      const playButton = document.querySelector(".play");
-      const refreshButton = document.querySelector(".refresh");
       const buttonsContainer = document.querySelector(".buttons-container");
 
       const hasGuessed = today in localStorage;
@@ -57,27 +54,19 @@ import "../styles/global.css";
         const todaysPicture = todaysBird["_pictures"][pictureIndex];
         let occurenceIndex =
           todaysIndex ** 3 % todaysBird["_occurrences"].length;
-        let todaysOccurence = todaysBird["_occurrences"][occurenceIndex];
-        let audio: HTMLAudioElement = new Audio(todaysOccurence["__birdsong"]);
+
+        const mainAudio = document.getElementById("main-audio");
+        mainAudio?.setAttribute("current", occurenceIndex.toString());
+        mainAudio?.setAttribute(
+          "occurrences",
+          JSON.stringify(todaysBird["_occurrences"]),
+        );
+        mainAudio?.dispatchEvent(new Event("audioLoaded"));
+
         const imageDetails = document.querySelector(".image-details-container");
         if (imageDetails) {
           imageDetails.innerHTML = `Image is courtesy of ${todaysPicture["rightsHolder"]}`;
         }
-
-        const setCredits = function (occurenceIndex: number) {
-          const creditsDetailsContainer = document.querySelector(
-            ".credits-details-container",
-          );
-
-          if (!creditsDetailsContainer) {
-            return;
-          }
-
-          creditsDetailsContainer.innerHTML = `Audio recording is courtesy of
-            ${todaysOccurence["__rightsHolder"]}. (Recording #${occurenceIndex + 1}
-            out of ${todaysBird["_occurrences"].length})`;
-        };
-        setCredits(occurenceIndex);
 
         image?.setAttribute(
           "src",
@@ -86,58 +75,6 @@ import "../styles/global.css";
             : "https://www.stockvault.net/data/2018/09/18/254636/preview16.jpg",
         );
         image?.removeAttribute("hidden");
-
-        refreshButton?.addEventListener("click", () => {
-          const newOccurrence = Math.floor(
-            Math.random() * todaysBird["_occurrences"].length,
-          );
-          todaysOccurence = todaysBird["_occurrences"][newOccurrence];
-          setCredits(newOccurrence);
-
-          const oldSvg = refreshButton
-            .getElementsByTagName("svg")[0]
-            .getElementsByTagName("path")[0]
-            .getAttribute("d");
-          refreshButton
-            .getElementsByTagName("svg")[0]
-            .getElementsByTagName("path")[0]
-            .setAttribute(
-              "d",
-              "M4 12a1 1 0 1 0 2 0a1 1 0 1 0-2 0m7 0a1 1 0 1 0 2 0a1 1 0 1 0-2 0m7 0a1 1 0 1 0 2 0a1 1 0 1 0-2 0",
-            );
-
-          setTimeout(() => {
-            refreshButton
-              .getElementsByTagName("svg")[0]
-              .getElementsByTagName("path")[0]
-              .setAttribute("d", oldSvg || "");
-          }, 200);
-
-          const wasPlaying = !audio.paused;
-          audio.pause();
-          audio = new Audio(todaysOccurence["__birdsong"]);
-          if (wasPlaying) {
-            audio?.play();
-          }
-        });
-
-        playButton?.addEventListener("click", () => {
-          playButton // Ugly thing to toggle between play/pause
-            .getElementsByTagName("svg")[0]
-            .getElementsByTagName("path")[0]
-            .setAttribute(
-              "d",
-              audio.paused ? "M14 19V5h4v14zm-8 0V5h4v14z" : "M8 5.14v14l11-7z",
-            );
-
-          if (audio.paused) {
-            audio.play();
-            return;
-          }
-
-          audio.pause();
-          audio.currentTime = 0;
-        });
 
         guessIndices.forEach((guess: number) => {
           const btn = document.createElement("div");
@@ -179,7 +116,7 @@ import "../styles/global.css";
 
           if (userCorrectGuess) {
             (window as any).confetti({
-              particleCount: 100,
+              particleCount: 30,
               spread: 70,
               origin: { y: 0.6 },
             });
@@ -227,10 +164,8 @@ import "../styles/global.css";
 
         <div class="column is-full has-text-centered image-details-container">
         </div>
-        <div class="column is-full has-text-centered credits-details-container">
-        </div>
-        <div class="column is-full has-text-centered audio-container">
-          <Audio />
+        <div class="column is-full has-text-centered" style="height: 10vh;">
+          <AudioRefresh class="is-full has-text-centered" name="main-audio" />
         </div>
 
         <div class="column has-text-centered" style="padding-bottom: 0;">
