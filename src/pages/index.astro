@@ -26,7 +26,6 @@ import "../styles/global.css";
       const loaded = document.querySelector(".loaded");
       const result = document.querySelector(".result");
       const image = document.querySelector(".bird-image");
-      const buttonsContainer = document.querySelector(".buttons-container");
 
       const hasGuessed = today in localStorage;
 
@@ -62,7 +61,7 @@ import "../styles/global.css";
 
         const imageDetails = document.querySelector(".image-details-container");
         if (imageDetails) {
-          imageDetails.innerHTML = `Image is courtesy of ${todaysPicture["rightsHolder"]}`;
+          imageDetails.textContent = `Image is courtesy of ${todaysPicture["rightsHolder"]}`;
         }
 
         image?.setAttribute(
@@ -71,11 +70,11 @@ import "../styles/global.css";
             ? todaysPicture["src"]
             : "https://www.stockvault.net/data/2018/09/18/254636/preview16.jpg",
         );
-        image?.removeAttribute("hidden");
 
+        const buttonsContainer = document.querySelector(".buttons-container");
         guessIndices.forEach((guess: number) => {
           const btn = document.createElement("div");
-          btn.className = "button-div";
+          btn.className = "column is-6-mobile is-2-desktop";
           btn.innerHTML += `
           <button
               class="button guess-button"
@@ -89,7 +88,7 @@ import "../styles/global.css";
             };
             localStorage.setItem(today, JSON.stringify(todaysGuess));
             refreshState();
-            image?.setAttribute("style", "");
+            image?.setAttribute("style", ""); // unblur
           });
           buttonsContainer?.appendChild(btn);
         });
@@ -149,25 +148,36 @@ import "../styles/global.css";
     </div>
     <div class="loaded" style="display: none;">
       <div class="columns is-centered is-multiline is-mobile">
-        <div class="column is-full has-text-centered">
-          <div class="title is-4" style="margin-top: 10px;">
+        <div class="column is-full"><br /></div>
+
+        <div class="column is-full">
+          <div class="title is-4 has-text-centered">
             🎶 Guess the Birdsong 🎶
           </div>
         </div>
 
         <div class="column is-full has-text-centered image-container">
-          <img class="bird-image" alt="A bird." hidden />
+          <img class="bird-image" alt="A bird." />
         </div>
 
-        <div class="column is-full has-text-centered image-details-container">
+        <div class="column is-full has-text-centered">
+          <div class="subtitle is-6 image-details-container"></div>
         </div>
+
         <div class="column is-full has-text-centered" style="height: 10vh;">
           <AudioRefresh class="is-full has-text-centered" name="main-audio" />
         </div>
 
-        <div class="column has-text-centered" style="padding-bottom: 0;">
-          <div class="is-centered buttons-container"></div>
+        <div
+          class="column has-text-centered is-centered"
+          style="padding-bottom: 0;"
+        >
+          <div
+            class="buttons-container columns has-text-centered is-centered is-multiline is-mobile is-gapless"
+          >
+          </div>
         </div>
+
         <div class="column is-full has-text-centered result"></div>
       </div>
     </div>
