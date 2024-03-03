@@ -1,8 +1,13 @@
 import { defineConfig } from "astro/config";
 
-// https://astro.build/config
 export default defineConfig({
   outDir: "docs",
-  site: "https://suraj.fyi",
+  site: "https://suraj.fyi/dailychirp",
   devToolbar: { enabled: false },
+  vite: {
+    base: "https://suraj.fyi/dailychirp",
+  },
+  build: {
+    assets: "assets",
+  },
 });
