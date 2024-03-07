@@ -1,9 +1,13 @@
 ---
-import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
-import AudioRefresh from "../components/AudioRefresh.astro";
-import Loader from "../components/Loader.astro";
+import MainGame from "../components/MainGame.astro";
 import "../styles/global.css";
+
+const data = await fetch(
+  "https://suraj.fyi/xeno-canto-processed/pickled_data.json",
+);
+const birds = await data.json();
+const birds_str = JSON.stringify(birds);
 ---
 
 <html lang="en">
@@ -17,170 +21,9 @@ import "../styles/global.css";
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
     />
-    <script>
-      import { todaysGuesses } from "../scripts/guess_generator";
-      import type { Bird, Guess } from "../types/types";
-      import confetti from "canvas-confetti";
-
-      const today = new Date().toDateString();
-      const loaded = document.querySelector(".loaded");
-      const result = document.querySelector(".result");
-      const image = document.querySelector(".bird-image");
-
-      const hasGuessed = today in localStorage;
-
-      image?.addEventListener("load", () => {
-        document
-          .querySelector(".loading")
-          ?.setAttribute("style", "display: none");
-        loaded?.removeAttribute("style");
-      });
-
-      window.addEventListener("load", async () => {
-        const data = await fetch(
-          "https://suraj.fyi/xeno-canto-processed/pickled_data.json",
-        );
-        const birds: Bird[] = await data.json();
-        const { todaysIndex, guesses: guessIndices } = await todaysGuesses(
-          today,
-          birds.length,
-        );
-        const todaysBird = birds[todaysIndex];
-        const pictureIndex = todaysIndex ** 2 % todaysBird["_pictures"].length;
-        const todaysPicture = todaysBird["_pictures"][pictureIndex];
-        let occurenceIndex =
-          todaysIndex ** 3 % todaysBird["_occurrences"].length;
-
-        const mainAudio = document.getElementById("main-audio");
-        mainAudio?.setAttribute("current", occurenceIndex.toString());
-        mainAudio?.setAttribute(
-          "occurrences",
-          JSON.stringify(todaysBird["_occurrences"]),
-        );
-        mainAudio?.dispatchEvent(new Event("audioLoaded"));
-
-        const imageDetails = document.querySelector(".image-details-container");
-        if (imageDetails) {
-          imageDetails.textContent = `Image is courtesy of ${todaysPicture["rightsHolder"]}`;
-        }
-
-        image?.setAttribute(
-          "src",
-          todaysBird["_pictures"].length
-            ? todaysPicture["src"]
-            : "https://www.stockvault.net/data/2018/09/18/254636/preview16.jpg",
-        );
-
-        const buttonsContainer = document.querySelector(".buttons-container");
-        guessIndices.forEach((guess: number) => {
-          const btn = document.createElement("div");
-          btn.className = "column is-6-mobile is-2-desktop";
-          btn.innerHTML += `
-          <button
-              class="button guess-button"
-              value="${guess}">${birds[guess]["vernacularName"]}
-          </button>
-        `;
-          btn.addEventListener("click", () => {
-            const todaysGuess: Guess = {
-              todaysIndex: `${todaysIndex}`,
-              yourGuess: `${guess}`,
-            };
-            localStorage.setItem(today, JSON.stringify(todaysGuess));
-            refreshState();
-            image?.setAttribute("style", ""); // unblur
-          });
-          buttonsContainer?.appendChild(btn);
-        });
-
-        if (hasGuessed) {
-          refreshState();
-        }
-        image?.setAttribute(
-          "style",
-          hasGuessed
-            ? "image-rendering: pixelated"
-            : "filter: blur(20px) grayscale(100%);",
-        );
-
-        function refreshState() {
-          const userGuess: Guess = JSON.parse(
-            localStorage.getItem(today) || "{}",
-          );
-          const userCorrectGuess =
-            userGuess["todaysIndex"] == userGuess["yourGuess"];
-
-          if (userCorrectGuess) {
-            confetti({
-              particleCount: 30,
-              spread: 70,
-              origin: { y: 0.6 },
-            });
-          }
-
-          document.querySelectorAll(".guess-button")?.forEach((button) => {
-            if (button.getAttribute("value") == userGuess["todaysIndex"]) {
-              button.classList.add("is-success");
-            } else if (button.getAttribute("value") == userGuess["yourGuess"]) {
-              button.classList.add("is-danger");
-            }
-            button.setAttribute("disabled", "");
-          });
-
-          if (result) {
-            if (userCorrectGuess) {
-              result.innerHTML += "<b>That's right</b>!";
-            } else {
-              result.innerHTML += "<b>Tough luck!</b>";
-            }
-            result.innerHTML += `<br>What you hear is a "${birds[todaysIndex]["vernacularName"]}"<br>(<i>${birds[todaysIndex]["scientificName"]}</i>)`;
-            result.innerHTML += `<br><a class='styled-link' href='https://www.gbif.org/species/${todaysBird["speciesKey"]}'>Click here</a> for more about this bird.`;
-          }
-        }
-      });
-    </script></head
-  >
-
+  </head>
   <body>
     <Header />
-    <div class="loading section has-text-centered is-centered">
-      <Loader />
-    </div>
-    <div class="loaded" style="display: none;">
-      <div class="columns is-centered is-multiline is-mobile">
-        <div class="column is-full"><br /></div>
-
-        <div class="column is-full">
-          <div class="title is-4 has-text-centered">
-            🎶 Guess the Birdsong 🎶
-          </div>
-        </div>
-
-        <div class="column is-full has-text-centered image-container">
-          <img class="bird-image" alt="A bird." />
-        </div>
-
-        <div class="column is-full has-text-centered">
-          <div class="subtitle is-6 image-details-container"></div>
-        </div>
-
-        <div class="column is-full has-text-centered" style="height: 10vh;">
-          <AudioRefresh class="is-full has-text-centered" name="main-audio" />
-        </div>
-
-        <div
-          class="column has-text-centered is-centered"
-          style="padding-bottom: 0;"
-        >
-          <div
-            class="buttons-container columns has-text-centered is-centered is-multiline is-mobile is-gapless"
-          >
-          </div>
-        </div>
-
-        <div class="column is-full has-text-centered result"></div>
-      </div>
-    </div>
-    <!-- <Footer /> -->
+    <MainGame birds={birds_str} />
   </body>
 </html>
