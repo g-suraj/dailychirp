@@ -1,6 +1,7 @@
 ---
 import Header from "../components/Header.astro";
 import MainGame from "../components/MainGame.astro";
+import MyBirds from "../components/MyBirds.astro";
 import "../styles/global.css";
 
 const data = await fetch(
@@ -25,5 +26,6 @@ const birds_str = JSON.stringify(birds);
   <body>
     <Header />
     <MainGame birds={birds_str} />
+    <MyBirds birds={birds_str} />
   </body>
 </html>

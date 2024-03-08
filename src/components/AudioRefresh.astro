@@ -15,6 +15,20 @@ const props = Astro.props as AudioProps;
     playButton: Element | null = null;
     component: Element | null = null;
 
+    setup(name: string) {
+      const props: AudioProps = {
+        occurrences: JSON.parse(
+          this.component?.attributes.getNamedItem("occurrences")?.value || "[]",
+        ) as Occurence[],
+        current: 0,
+        name,
+      };
+      this.occurrences = props.occurrences;
+      this.current = 0;
+      this.setAudio();
+      this.setCredits();
+    }
+
     constructor() {
       super();
       this.style.display = "block";
@@ -31,20 +45,13 @@ const props = Astro.props as AudioProps;
           ?.getElementsByClassName("credits-details-container")
           .item(0) || null;
 
-      this.component?.addEventListener("audioLoaded", () => {
-        const props: AudioProps = {
-          occurrences: JSON.parse(
-            this.component?.attributes.getNamedItem("occurrences")?.value ||
-              "[]",
-          ) as Occurence[],
-          current: 0,
-          name,
-        };
-        this.occurrences = props.occurrences;
-        this.current = props.current;
-        this.setAudio();
-        this.setCredits();
-      });
+      if (this.attributes.getNamedItem("occurrences")) {
+        this.setup(name);
+      } else {
+        this.component?.addEventListener("audioLoaded", () => {
+          this.setup(name);
+        });
+      }
 
       this.playButton?.addEventListener("click", () => {
         if (this.audio === null) return;
@@ -102,13 +109,14 @@ const props = Astro.props as AudioProps;
 
     setCredits(): void {
       if (!this.credits) return;
-
+      if (this.occurrences.length == 0) return;
       this.credits.innerHTML = `Audio recording is courtesy of
         ${this.occurrences[this.current]["__rightsHolder"]}. (Recording #${this.current + 1}
         out of ${this.occurrences.length})`;
     }
 
     setAudio(): void {
+      if (this.occurrences.length === 0) return;
       this.audio = new Audio(this.occurrences[this.current]["__birdsong"]);
       this.audio?.addEventListener("play", () => {
         this.togglePlayButton(true);

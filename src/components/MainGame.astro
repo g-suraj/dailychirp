@@ -130,7 +130,11 @@ const { birds } = Astro.props;
   customElements.define("main-game", MainGaime);
 </script>
 
-<main-game data-birds={birds}>
+<main-game
+  data-birds={birds}
+  class="main-game-container"
+  style="display: block;"
+>
   <div class="loading section has-text-centered is-centered">
     <Loader />
   </div>

@@ -1,0 +1,84 @@
+---
+const { birds } = Astro.props;
+import type { Bird } from "../types/types";
+import AudioRefresh from "../components/AudioRefresh.astro";
+---
+
+<style>
+  .bird-container {
+    padding: 0;
+    margin: 0;
+    margin-bottom: 10vh;
+  }
+</style>
+
+<script>
+  import type { Bird, Guess } from "../types/types";
+  class MyBirds extends HTMLElement {
+    birds: Bird[] = [];
+    constructor() {
+      super();
+      this.birds = JSON.parse(this.dataset.birds || "[]");
+      let successfulGuesses: number[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const guess: Guess = JSON.parse(
+          localStorage.getItem(localStorage.key(i) || "") || "{}",
+        );
+        if (guess["todaysIndex"] !== guess["yourGuess"]) {
+          continue;
+        }
+        successfulGuesses.push(parseInt(guess["todaysIndex"]));
+      }
+
+      for (const successfulGuess of successfulGuesses) {
+        const bird = document.querySelector(
+          `#my-birds-container-${successfulGuess}`,
+        );
+        bird?.setAttribute("style", "display: flex");
+        const img = bird?.getElementsByTagName("img").item(0);
+        const src_img = this.birds.at(successfulGuess)?._pictures.at(0)?.src;
+        if (img && src_img) {
+          img.src = src_img;
+        }
+      }
+    }
+  }
+
+  customElements.define("my-birds", MyBirds);
+</script>
+
+<my-birds data-birds={birds} class="my-birds-container" style="display:none">
+  <br />
+  <div class="title is-4 has-text-centered">🐣 My Birds 🐣</div>
+  {
+    JSON.parse(birds || "[]").map((bird: Bird, idx: number) => {
+      const id = `my-birds-container-${idx}`;
+      return (
+        <div
+          id={id}
+          class="columns is-centered is-multiline is-mobile bird-container"
+          style="display: none;"
+        >
+          <img class="column is-6 bird-image" alt="A bird." />
+          <div class="column is-1" />
+          <div class="column is-4 has-text-centered" style="height: 1vh;">
+            <div class="columns is-mobile is-multiline is-centered has-text-centered">
+              <div class="column is-full has-text-centered">
+                <AudioRefresh
+                  class="is-full has-text-centered"
+                  occurrences={JSON.stringify(bird["_occurrences"])}
+                  current="0"
+                  name={bird.vernacularName}
+                  id={bird.vernacularName}
+                />
+              </div>
+              <div class="column is-full has-text-centered">
+                {bird.vernacularName}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    })
+  }
+</my-birds>
