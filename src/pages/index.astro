@@ -22,7 +22,22 @@ const birds_str = JSON.stringify(birds);
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
     />
-  </head>
+    <script
+      is:inline
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-CDNMXYYJ87"
+    ></script><script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-CDNMXYYJ87");
+    </script></head
+  >
+  <!-- Google tag (gtag.js) -->
+
   <body>
     <Header />
     <MainGame birds={birds_str} />
