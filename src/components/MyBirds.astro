@@ -40,6 +40,15 @@ import AudioRefresh from "../components/AudioRefresh.astro";
         if (img && src_img) {
           img.src = src_img;
         }
+
+        const birdAudio = document.querySelector(
+          `#${this.birds[successfulGuess]["vernacularName"]}`,
+        );
+        birdAudio?.setAttribute(
+          "occurrences",
+          JSON.stringify(this.birds[successfulGuess]["_occurrences"]),
+        );
+        birdAudio?.dispatchEvent(new Event("audioLoaded"));
       }
     }
   }
@@ -59,14 +68,17 @@ import AudioRefresh from "../components/AudioRefresh.astro";
           class="columns is-centered is-multiline is-mobile bird-container"
           style="display: none;"
         >
-          <img class="column is-6 bird-image" alt="A bird." />
+          <img
+            class="column is-6 bird-image"
+            alt="A bird."
+            src="https://www.stockvault.net/data/2018/09/18/254636/preview16.jpg"
+          />
           <div class="column is-1" />
           <div class="column is-4 has-text-centered" style="height: 1vh;">
             <div class="columns is-mobile is-multiline is-centered has-text-centered">
               <div class="column is-full has-text-centered">
                 <AudioRefresh
                   class="is-full has-text-centered"
-                  occurrences={JSON.stringify(bird["_occurrences"])}
                   current="0"
                   name={bird.vernacularName}
                   id={bird.vernacularName}

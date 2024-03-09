@@ -45,13 +45,9 @@ const props = Astro.props as AudioProps;
           ?.getElementsByClassName("credits-details-container")
           .item(0) || null;
 
-      if (this.attributes.getNamedItem("occurrences")) {
+      this.component?.addEventListener("audioLoaded", () => {
         this.setup(name);
-      } else {
-        this.component?.addEventListener("audioLoaded", () => {
-          this.setup(name);
-        });
-      }
+      });
 
       this.playButton?.addEventListener("click", () => {
         if (this.audio === null) return;
