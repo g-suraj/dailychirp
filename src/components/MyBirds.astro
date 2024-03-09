@@ -41,9 +41,7 @@ import AudioRefresh from "../components/AudioRefresh.astro";
           img.src = src_img;
         }
 
-        const birdAudio = document.querySelector(
-          `#${this.birds[successfulGuess]["vernacularName"]}`,
-        );
+        const birdAudio = document.querySelector(`#audio-${successfulGuess}`);
         birdAudio?.setAttribute(
           "occurrences",
           JSON.stringify(this.birds[successfulGuess]["_occurrences"]),
@@ -62,6 +60,7 @@ import AudioRefresh from "../components/AudioRefresh.astro";
   {
     JSON.parse(birds || "[]").map((bird: Bird, idx: number) => {
       const id = `my-birds-container-${idx}`;
+      const audioId = `audio-${idx}`;
       return (
         <div
           id={id}
@@ -80,8 +79,8 @@ import AudioRefresh from "../components/AudioRefresh.astro";
                 <AudioRefresh
                   class="is-full has-text-centered"
                   current="0"
-                  name={bird.vernacularName}
-                  id={bird.vernacularName}
+                  name={audioId}
+                  id={audioId}
                 />
               </div>
               <div class="column is-full has-text-centered">
