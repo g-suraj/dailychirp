@@ -27,7 +27,7 @@ const { birds } = Astro.props;
       const todaysBird = birds[todaysIndex];
       const pictureIndex = todaysIndex ** 2 % todaysBird["_pictures"].length;
       const audioIndex = todaysIndex ** 3 % todaysBird["_occurrences"].length;
-      const todaysPicture = todaysBird["_pictures"][pictureIndex];
+      const todaysPicture = todaysBird["_pictures"].at(pictureIndex);
 
       const loaded = document.querySelector(".loaded");
       const result = document.querySelector(".result");
@@ -50,16 +50,18 @@ const { birds } = Astro.props;
       );
       mainAudio?.dispatchEvent(new Event("audioLoaded"));
 
-      if (imageDetails) {
-        imageDetails.textContent = `Image is courtesy of ${todaysPicture["rightsHolder"]}`;
-      }
+      if (todaysPicture) {
+        if (imageDetails) {
+          imageDetails.textContent = `Image is courtesy of ${todaysPicture["rightsHolder"]}`;
+        }
 
-      image?.setAttribute(
-        "src",
-        todaysBird["_pictures"].length
-          ? todaysPicture["src"]
-          : "https://www.stockvault.net/data/2018/09/18/254636/preview16.jpg",
-      );
+        image?.setAttribute("src", todaysPicture["src"]);
+      } else {
+        image?.setAttribute(
+          "src",
+          "https://www.stockvault.net/data/2018/09/18/254636/preview16.jpg",
+        );
+      }
 
       guessIndices.forEach((guess: number, index) => {
         const buttonDiv = buttonsContainer?.children.item(index);
@@ -82,12 +84,12 @@ const { birds } = Astro.props;
       if (hasGuessed) {
         refreshState();
       }
-      image?.setAttribute(
-        "style",
-        hasGuessed
-          ? "image-rendering: pixelated"
-          : "filter: blur(20px) grayscale(100%);",
-      );
+      if (todaysPicture) {
+        image?.setAttribute(
+          "style",
+          hasGuessed ? "" : "filter: blur(20px) grayscale(100%);",
+        );
+      }
 
       function refreshState() {
         // Only should be called once there is a guess
